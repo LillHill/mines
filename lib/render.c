@@ -156,5 +156,6 @@ void print_map(game_state *g) {
   for (unsigned int row = 0; row < g->size.row; row++) {
     line = render_line(row, g);
     puts(line);
+    free(line);
   }
 }

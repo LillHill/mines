@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
   bool invalid = true;
   do {
     cursor.row = rand() % rows_n;
-    cursor.col = rand() & cols_n;
+    cursor.col = rand() % cols_n;
     if (!pos_in_limits(game, cursor)) {
       continue;
     } else if (game->map[cursor.row][cursor.col] != 0) {
