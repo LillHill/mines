@@ -60,6 +60,8 @@ int main(int argc, char *argv[]) {
   /* set the new settings immediately */
   tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 
+  bool exit_game = false;
+
   do {
     c = getchar();
     if (c == 27) { // ESC character
@@ -67,24 +69,32 @@ int main(int argc, char *argv[]) {
       c2 = getchar();
       c3 = getchar();
       if (c2 != '[') {
-        printf("special character unsupported %d %d", c2, c3);
+        printf("special character unsupported as an input %d %d", c2, c3);
       } else {
         switch (c3) {
         case 'A':
-          printf("\"arr up");
           game->cursor.row--;
+          if (!pos_in_limits(game, game->cursor)) {
+            game->cursor.row++;
+          }
           break;
         case 'B':
-          printf("\"arr down");
           game->cursor.row++;
+          if (!pos_in_limits(game, game->cursor)) {
+            game->cursor.row--;
+          }
           break;
         case 'C':
-          printf("\"arr right");
           game->cursor.col++;
+          if (!pos_in_limits(game, game->cursor)) {
+            game->cursor.col--;
+          }
           break;
         case 'D':
-          printf("\"arr left");
           game->cursor.col--;
+          if (!pos_in_limits(game, game->cursor)) {
+            game->cursor.col++;
+          }
           break;
         }
         print_map(game);
@@ -101,23 +111,43 @@ int main(int argc, char *argv[]) {
         break;
       case ERROR:
         puts("ERROR\n");
-        break;
+        exit_game = true;
       case GAME_OVER:
-        puts("GAME OVER");
-        break;
+        for (unsigned int row = 0; game->size.row > row; row++) {
+          for (unsigned int col = 0; game->size.col > col; col++) {
+            int *place = &game->map[row][col];
+            PLACE_STATE *state = &game->map_state[row][col];
+            if (*place == -1) {
+              *state = MINE;
+            }
+          }
+        }
+        print_map(game);
+        puts("GAME OVER\n");
+        exit_game = true;
       }
     } else if (c == 'b') {
       PLACE_STATE *place = &game->map_state[game->cursor.row][game->cursor.col];
       if (*place == MINE) {
         *place = UNKNOWN;
+        game->mines_spotted--;
       } else if (*place == UNKNOWN) {
         *place = MINE;
+        game->mines_spotted++;
       }
       print_map(game);
     }
 
-    printf("\"%c", c);
-  } while (c != 'q');
+    if (game->mines_spotted == game->mines_constant &&
+        game->num_of_places_to_search == game->mines_constant) {
+      exit_game = true;
+      printf("WIN\n");
+    }
+
+    // printf("\"%c", c);
+  } while (c != 'q' && !exit_game);
+
+  free_game(game);
 
   /* restore the former settings */
   tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);

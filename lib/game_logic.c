@@ -1,7 +1,6 @@
 #include "mapgen.h"
 #include "types.h"
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 game_state *init_game(pos size, char mine_percentage, pos old_cursor) {
@@ -9,6 +8,10 @@ game_state *init_game(pos size, char mine_percentage, pos old_cursor) {
   unsigned int num_mines = (num_places * mine_percentage) / 100;
   game_state *g = malloc(sizeof(game_state));
   g->size = size;
+  g->mines_constant = num_mines;
+  g->num_of_places = num_places;
+  g->num_of_places_to_search = num_places;
+  g->mines_spotted = 0;
   g->cursor = old_cursor;
   g->map = map_gen(size.row, size.col, num_mines);
 
@@ -75,6 +78,7 @@ GAME_ACTOIN_MESG step_on_place(game_state *g) {
       continue;
     }
     g->map_state[eval.row][eval.col] = SAFE;
+    g->num_of_places_to_search--;
     if (g->map[eval.row][eval.col] == 0) {
       for (unsigned char ori = 0; ori < 8; ori++) {
         pos off_pos = get_vec(ori, eval);

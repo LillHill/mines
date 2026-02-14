@@ -13,6 +13,8 @@ typedef struct {
   pos size;
   int **map;
   PLACE_STATE **map_state;
+  unsigned int num_of_places, num_of_places_to_search, mines_constant,
+      mines_spotted;
 } game_state;
 
 typedef struct pos_buf_block {
