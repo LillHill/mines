@@ -82,80 +82,100 @@
 #define STYLE_UNDERLINE CSI "4m"
 #define STYLE_INVERSE CSI "7m"
 
-void clear() { printf(CLEAR_SCREEN CURSOR_HOME); }
-char *render_line(unsigned int row, game_state *g) {
-  if (g->size.row <= row) {
-    return NULL;
-  }
-
-  int *line = g->map[row];
-  PLACE_STATE *line_state = g->map_state[row];
-
-  PLACE_STATE state;
-  int place;
-  char *out = malloc(sizeof(char) * g->size.col * 20); // uneffective but "safe"
-  out[0] = '\0';
-
-  for (unsigned int col = 0; col < g->size.col; col++) {
-    place = line[col];
-    state = line_state[col];
-
-    if (row == g->cursor.row && col == g->cursor.col) {
-      strcat(out, BG_MAGENTA FG_WHITE "#" ANSI_RESET);
-      continue;
+void update_used_len(unsigned int *len, char *buff, unsigned int alloc_len)
+{
+    while (buff[*len] != '\0' && *len < alloc_len) {
+        (*len)++;
     }
-
-    switch (state) {
-    case UNKNOWN:
-      strcat(out, BG_WHITE " " ANSI_RESET);
-      break;
-    case MINE:
-      strcat(out, BG_BRIGHT_RED FG_WHITE "#" ANSI_RESET);
-      break;
-    case SAFE:
-      switch (place) {
-      case 0:
-        strcat(out, FG_BLACK " ");
-        break;
-      case 1:
-        strcat(out, FG_BLUE "1");
-        break;
-      case 2:
-        strcat(out, FG_BRIGHT_BLUE "2");
-        break;
-      case 3:
-        strcat(out, FG_GREEN "3");
-        break;
-      case 4:
-        strcat(out, FG_BRIGHT_GREEN "4");
-        break;
-      case 5:
-        strcat(out, FG_MAGENTA "5");
-        break;
-      case 6:
-        strcat(out, FG_BRIGHT_MAGENTA "6");
-        break;
-      case 7:
-        strcat(out, FG_YELLOW "7");
-        break;
-      case 8:
-        strcat(out, FG_RED "8");
-        break;
-      }
-    }
-  }
-
-  strcat(out, ANSI_RESET);
-
-  return out;
 }
 
-void print_map(game_state *g) {
-  clear();
-  char *line;
-  for (unsigned int row = 0; row < g->size.row; row++) {
-    line = render_line(row, g);
-    puts(line);
-    free(line);
-  }
+const unsigned int MAX_INCREASE = 20;
+void clear() { printf(CLEAR_SCREEN CURSOR_HOME); }
+char *render_line(unsigned int row, game_state *g)
+{
+    if (g->size.row <= row) {
+        return NULL;
+    }
+
+    int *line = g->map[row];
+    PLACE_STATE *line_state = g->map_state[row];
+
+    PLACE_STATE state;
+    int place;
+    unsigned int used_len = 0;
+    unsigned int alloc_len = sizeof(char) * g->size.col;
+    char *out = malloc(alloc_len);
+    out[0] = '\0';
+
+    for (unsigned int col = 0; col < g->size.col; col++) {
+        update_used_len(&used_len, out, alloc_len);
+        if (used_len + MAX_INCREASE >= alloc_len) {
+            alloc_len += sizeof(char) * MAX_INCREASE;
+            out = realloc(out, alloc_len);
+            if (out == NULL)
+                exit(100);
+        }
+
+        place = line[col];
+        state = line_state[col];
+
+        if (row == g->cursor.row && col == g->cursor.col) {
+            strcat(out, BG_MAGENTA FG_WHITE "#" ANSI_RESET);
+            continue;
+        }
+
+        switch (state) {
+        case UNKNOWN:
+            strcat(out, BG_WHITE " " ANSI_RESET);
+            break;
+        case MINE:
+            strcat(out, BG_BRIGHT_RED FG_WHITE "#" ANSI_RESET);
+            break;
+        case SAFE:
+            switch (place) {
+            case 0:
+                strcat(out, FG_BLACK " ");
+                break;
+            case 1:
+                strcat(out, FG_BLUE "1");
+                break;
+            case 2:
+                strcat(out, FG_BRIGHT_BLUE "2");
+                break;
+            case 3:
+                strcat(out, FG_GREEN "3");
+                break;
+            case 4:
+                strcat(out, FG_BRIGHT_GREEN "4");
+                break;
+            case 5:
+                strcat(out, FG_MAGENTA "5");
+                break;
+            case 6:
+                strcat(out, FG_BRIGHT_MAGENTA "6");
+                break;
+            case 7:
+                strcat(out, FG_YELLOW "7");
+                break;
+            case 8:
+                strcat(out, FG_RED "8");
+                break;
+            }
+        }
+    }
+
+    strcat(out, ANSI_RESET);
+
+    return out;
+}
+
+void print_map(game_state *g)
+{
+    clear();
+    char *line;
+    for (unsigned int row = 0; row < g->size.row; row++) {
+        line = render_line(row, g);
+        puts(line);
+        free(line);
+    }
 }

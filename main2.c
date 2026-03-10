@@ -18,33 +18,6 @@ int main(int argc, char *argv[])
     int rows_n = atoi(argv[1]);
     int cols_n = atoi(argv[2]);
     char mine_density = atoi(argv[3]);
-    bool bot_option = false;
-
-    printf("%d\n", argc);
-    if (argc >= 5) {
-        puts("bot2 option check");
-        bool eqauls = true;
-        char *ptr = "--bot";
-        int ok = printf("cmp: %d == %d ?", *argv[4], *ptr);
-        printf("%d", ok);
-
-        while (*argv[4] != '\0' || *ptr != '\0') {
-            printf("cmp: %d == %d ?", *argv[4], *ptr);
-            if (*argv[4] != *ptr) {
-                eqauls = false;
-                break;
-            }
-            argv[4]++;
-            ptr++;
-        }
-        if (eqauls) {
-            printf("bot option selected (all controls turned off except for "
-                   "\'q\' for quit)");
-            bot_option = true;
-        }
-    }
-
-    sleep(1);
 
     if (rows_n <= 0 || cols_n <= 0 ||
         (mine_density >= 100 || mine_density <= 0)) {
@@ -141,7 +114,6 @@ int main(int argc, char *argv[])
             case ERROR:
                 puts("ERROR\n");
                 exit_game = true;
-                break;
             case GAME_OVER:
                 for (unsigned int row = 0; game->size.row > row; row++) {
                     for (unsigned int col = 0; game->size.col > col; col++) {
